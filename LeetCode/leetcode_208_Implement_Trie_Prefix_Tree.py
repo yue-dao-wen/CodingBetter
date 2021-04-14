@@ -29,12 +29,10 @@ class Trie:
         Returns if the word is in the trie.
         """
         cur_node = self.root
-        for c in word[:-1]:
+        for c in word:
             if c not in cur_node.nex:
                 return False
             cur_node = cur_node.nex[c]
-        if word[-1] not in cur_node.nex:
-            return False
         return cur_node.nex[word[-1]].is_end
 
     def startsWith(self, prefix: str) -> bool:
