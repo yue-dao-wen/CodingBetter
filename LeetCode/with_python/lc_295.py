@@ -16,24 +16,58 @@ class MyMinHeap:
         # TODO： 堆其实就是一个按照某种奇怪的方式排列的数组，进行排列就行。
         # TODO: 堆排序可以，一个一个添加的时候，怎么实时的去上浮和下潜？ heapify里面就有这个过程啊！！
 
-    def heapify(self):
+    def siftdown(self):
+        # TODO： 为啥叫做siftdown？ 这是不是向上吗？
+        new = self.nums[-1]
+        idx = len(self.nums) - 1
+        while idx > 0:
+            parent_idx = (idx - 1) >> 1
+            parent = self.nums[parent_idx]
+            if new < parent:
+                self.nums[idx] = parent
+                idx = parent
+                continue
+            break
+        # TODO: 为啥不需要考虑同一阶层的另一个子节点？
+        self.nums[idx] = new
+        pass
+
+    # todo： 确定了最大堆还是最小堆之后，代码的哪些地方不同？
+
+    # todo: 同一个parent_idx的左右两个子节点的大小关系是什么？会对代码的哪些流程产生影响？
+
+    # TODO： 堆里面大家经常说的heapify过程是指什么？和swim什么关系？和sink什么关系？
+
+    def siftup(self, pos):
+        endpos = len(self.nums)
+        starpos = pos
+        newitem = self.nums[pos]
+
+        childpos = 2 * pos + 1  # 左孩子
+        while childpos < endpos:
+            rightpos = childpos + 1
+            if rightpos < endpos and not self.nums[childpos] < self.nums[rightpos]:
+                # 左边的要小一点。
+                childpos = rightpos
+            self.nums[pos] = self.nums[childpos]
+            pos = childpos
+            childpos = 2 * pos + 1
+
         pass
 
     def push(self, num):
-        if not self.nums:
-            self.nums.append(num)
-            return
-
+        self.nums.append(num)
+        self.siftdown()
         # 二叉树形式时，堆顶的数字并非最大或者最小，而是靠近中间的值
-
-
-
-
 
         pass
 
-    def pop(self, num):
+    def pop(self):
         # 删除最左边的， 列表的删除最左边的时间复杂度是多少？
+        self.nums[0], self.nums[-1] = self.nums[-1], self.nums[0]
+        ans = self.nums.pop()
+        self.siftup(0)
+        return ans
 
         # 删除之后在进行heapify
 
@@ -121,7 +155,8 @@ class MedianFinderHeap:
 
     def addNum(self, num):
         if not self.que_min or num <= -self.que_min[0]:
-            # heapq默认是顶端是最小的。但是self.que_min每次要用最大的来比，所以加负号
+            # heapq默认是最小堆，idx=0的时候最小。
+            # 但是self.que_min每次要用最大的来比，所以加负号
             # 新进来的数字比最小堆里最大的小，那就应该放在最小堆里。
             heapq.heappush(self.que_min, -num)
             if len(self.que_max) + 1 < len(self.que_min):
@@ -159,8 +194,8 @@ def main():
     sl = None
     for idx, op in enumerate(ops):
         if op == 'MedianFinder':
-            # sl = MedianFinderHeap()
-            # sl = MedianFinderMyMethod()
+            sl = MedianFinderHeap()
+            sl = MedianFinderMyMethod()
             sl = MedianFinderMyHeap()
         elif op == "addNum":
             sl.addNum(nums[idx][0])
