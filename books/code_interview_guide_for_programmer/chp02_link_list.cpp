@@ -1,5 +1,6 @@
 # include "datastruct.hpp"
 # include<vector>
+# include<math.h>
 using namespace std;
 
 
@@ -95,6 +96,46 @@ ListNode* RemoveMidListNode(ListNode *head){
     return head;
 }
 
+int CountNodeNum(ListNode* head){
+    int n = 0;
+    while(head != nullptr){
+        head = head->next;
+        n ++ ;
+    }
+    return n;
+}
+
+ListNode* RemoveNodeByRatio(ListNode* head, int numerator, int denominator){
+    if(numerator > denominator || numerator < 1 || head == nullptr){
+        return head;
+    }
+
+    int n = CountNodeNum(head); // todo：咋这个函数里改变指向，会影响外面的吗？
+    int kth = (int) ceil(n * ((double) numerator / (double) denominator));
+    if(kth == 1){
+        return head->next;
+    }
+    ListNode *cur = head;
+    while(kth != 2){
+        cur = cur->next;
+        kth --;
+    }
+    cur->next = cur->next->next;
+    return head;
+    
+}
+
+int run_remove_node_by_ratio(){
+    vector<int> nums = {1, 2, 3, 4, 5, 6, 7};
+    int numerator = 5, denominator = 7;
+
+    ListNode *head = BuildLinkList(nums);
+    PrintLinkList(head);
+    ListNode *new_head =  RemoveNodeByRatio(head, numerator, denominator);
+    PrintLinkList(new_head);
+    return 0;
+}
+
 int run_remove_mid_list_node(){
     vector<int> nums = {1, 2, 3};
     ListNode *head = BuildLinkList(nums);
@@ -144,7 +185,8 @@ int main(){
     // run_print_common_value();
     // run_remove_lastk_node();
     // run_remove_last_kth_double_node();
-    run_remove_mid_list_node();
+    // run_remove_mid_list_node();
+    run_remove_node_by_ratio();
     return 0;
     
 
