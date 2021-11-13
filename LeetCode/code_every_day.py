@@ -1,4 +1,5 @@
 
+from _typeshed import Self
 from collections import deque
 from typing import List
 from functools import lru_cache
@@ -95,17 +96,32 @@ def print_nums(nums):
 class TrieNode:
     def __init__(self) -> None:
         self.children = [None] * 26
-        self.is_end = False
+        self.is_end = False # 标记是否是一个单词的结尾
+        self.val = 0    # 当前节点的值
+        self.ssum = 0    # 以当前为前缀的所有词的值的和
         pass
     
-    def insert(self, word):
-        node = self # node是自己就很酷
+    def insert(self, word, val=0, delta=0):
+        node = self # node可以是自己，这种用法很酷啊
         for c in word:
             c_idx = ord(c) - ord("a")
             if not node.children[c_idx]:
                 node.children[c_idx] = TrieNode()
             node = node.children[c_idx]
+            node.ssum += delta # ssum值跟前缀中每个单词都有关系
         node.is_end = True
+        node.val = val # val值只需要在单词最后一个位置加就行
+    
+    def find_last_node(self, prefix):
+        node = self
+        for c in prefix:
+            c_idx = ord(c) - ord('a')
+            if node.children[c_idx] is None:
+                return None
+            node = node.children[c_idx]
+        return node
+
+
    
 
 class WordDictionary:
@@ -367,6 +383,73 @@ class Solution:
                 return True
         
         return False
+    def trapRainWater(self, heightMap: List[List[int]]) -> int:
+        # 解法1：最小堆。
+        # 为什么要用最小堆呢？
+        ans = 0
+        n_row = len(heightMap)
+        n_col = len(heightMap)
+        water_height = [[0] * n_col for _ in range(n_row) ]
+        for i in range(n_row):
+            for j in range(n_col):
+                if i == 0 or j == 0 or i == n_row - 1 or j == n_col - 1:
+                    water_height[i][j] = heightMap[i][j]
+                else:
+                    # 左上角肯定是已经有了的
+                    water_height[i][j] = 
+        
+        # 左上角肯定是已经有了的。
+        
+        pass
+
+from collections import defaultdict
+class MapSum_PrefixMap:
+
+    def __init__(self):
+        self.word_map = defaultdict(int)
+        self.prefix_map = defaultdict(int)
+
+    def insert(self, word: str, wval: int) -> None: # 将函数签名改为word和wval, 可读性更强。
+        delta = wval
+        # 对于为什么要设置一个delta，思考这样一个问题。如果insert函数先后输入两组值：("leetcode", 10)和("leetcode", 20)。
+        # "leetcode"这个词的两个wval，是两个都算还是只算一个？如果只算一个，应该算哪个呢？
+        # 因为是同一个词，当然只算一个。因为涉及到更新，所以当然要算第二个。
+        # 之所以要设计一个delta, 就是出于这个原因，解决word相同，而wval不同的情况。
+        # 这种情况下，key没有变，不能当做新来一个词那样，给所有的prefix添加新的wval，而是需要更新。
+        # delta就是就算的新wval 和旧的wval之间的差值，用这个差值去给所有涉及到的prefix赋值就行了。 
+        if word in self.word_map:   # 如果已经见过这个单词, 就不应该继续赋值，而是刷新。
+            delta -= self.word_map[word]
+        self.word_map[word] = wval
+        for i in range(len(word)):
+            prefix = word[:i+1]  # 每种前缀都会出现
+            self.prefix_map[prefix] += delta
+           
+    def sum(self, prefix: str) -> int:
+        return self.prefix_map.get(prefix, 0)
+
+
+class MapSum_Trie:
+    def __init__(self) -> None:
+        self.root = TrieNode()
+        self.word_map = {}
+
+    def insert(self, word, wval):
+        delta = wval
+        if word in self.word_map:
+            delta -= self.word_map[word]
+        self.word_map[word] = wval
+
+        self.root.insert(word, delta=delta)
+    
+    def sum(self, prefix):
+        node = self.root.find_last_node(prefix)
+        return node.ssum if node else 0
+
+
+
+
+
+
 
 def run_lc240():
     sl = Solution()

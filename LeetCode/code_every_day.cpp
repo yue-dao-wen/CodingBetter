@@ -18,26 +18,49 @@ public:
     Node* child;
 };
 
+class TrieNode{
+public:
+    // TrieNode()的括号里放什么？
+    TrieNode(): children(26, nullptr), is_end(false), val(0), sum(0) {} // 为什么要在这里初始化?
+    
+    void insert(std::string word, int val, int delta);
+    TrieNode* get_last_node(std::string word);
 
-struct TrieNode{
-    vector<TrieNode *> children;
-    bool isEnd;
-    TrieNode(){ // 为啥结构也尅有函数？初始化函数?
-        this->children = vector<TrieNode *>(26, nullptr);
-        this->isEnd = false;
-    } 
+    // 什么时候private呢？
+    bool is_end;
+    int val;
+    int sum;
+    vector<TrieNode *> children;  // vector<TrieNode *> children;(26, nullptr)为什么会提示 “应输入类型说明符”
+    
+
 };
 
-void TrieNodeInsert(TrieNode *root, const string &word){
-    // tolearn:为啥要用静态的？为啥要在函数里使用引用？
-    TrieNode *node = root;
+void TrieNode::insert(std::string word, int val, int delta){
+    TrieNode *node = this;
+    int c_idx;
     for(auto c: word){
-        if (node->children[c - 'a'] == nullptr){
-            node->children[c - 'a'] = new TrieNode();
+        c_idx = c - 'a';
+        if(node->children[c_idx] == nullptr){
+            node->children[c_idx] = new TrieNode();
         }
-        node = node->children[c - 'a'];
+        node = node->children[c_idx];
+        node->sum += delta;
     }
-    node->isEnd = true;
+    node->is_end = true;
+    node->val = val;
+
+}
+
+TrieNode* TrieNode::get_last_node(std::string prefix){
+    TrieNode *node = this;
+    for (auto c: prefix){
+        if (node->children[c - 'a'] == nullptr){
+            return nullptr;
+        }else{
+            node = node->children[c - 'a'];
+        }
+    }
+    return node;
 }
 
 
@@ -130,7 +153,7 @@ public:
 
             if (next_needs.size() == n_kind){
                 int price = shoppingOffers_dfs(&next_needs, p_price, special);
-                min_price = min(min_price, price + sp.end());
+                // min_price = min(min_price, price + sp.end());
             }
 
         }
@@ -183,6 +206,69 @@ public:
     }// func nextGreaterElement
 };// class solution
 
+class MapSum_Map {
+public:
+    MapSum_Map() {}
+
+    void insert(string word, int wval) {
+        int delta = wval;
+        if(word_map.count(word)){  // 判断存在
+            delta -= word_map[word]; // 计算新值和旧值的变量
+        }
+        word_map[word] = wval;
+        for(int i = 0; i < word.size(); i++){
+            prefix_map[word.substr(0, i+1)] += delta;
+        }
+    }
+    
+    int sum(string prefix) {
+        return prefix_map[prefix]; // 默认初始化就为0了。
+    }
+private:
+    // 什么情况下需要private？
+    unordered_map<std::string, int> word_map; 
+    unordered_map<std::string, int> prefix_map;
+};
+
+class MapSum {
+public:
+    MapSum() {}
+
+    void insert(std::string word, int wval);
+    int sum(std::string prefix);
+
+private:
+    TrieNode* root = new TrieNode();    // 这里要写成new 的形式！不能下成TrieNode *root; 为啥呢?
+    unordered_map<std::string, int> word_map;
+};
+
+ void MapSum::insert(string word, int wval){
+        int delta = wval;
+        if(word_map.count(word)){
+            delta -= word_map[word];
+        }
+        word_map[word] = wval;
+        root->insert(word, wval, delta);
+    }
+
+int MapSum::sum(std::string prefix){
+    TrieNode* node = root->get_last_node(prefix);
+    if(node == nullptr){
+        return 0;
+    }else{
+        return node->sum;
+    }
+}
+
+int run_lc677(){
+    MapSum sl;
+    sl.insert("leetcode", 2);
+    sl.insert("luhan", 7);
+    int cnt = sl.sum("l");
+    cout << cnt << endl;
+    return 0;
+}
+
 
 int run_lc453(){
     vector<int> nums = {1, 2, 3};
@@ -194,6 +280,7 @@ int run_lc453(){
 
 
 int main(){
-    run_lc453();
+    // run_lc453();
+    run_lc677();
     return 0;
 }
