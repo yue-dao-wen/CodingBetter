@@ -1,8 +1,9 @@
-
-from _typeshed import Self
 from collections import deque
-from typing import List
+from typing import Counter, List
 from functools import lru_cache
+from collections import defaultdict
+import math
+import re
 
 # Definition for a Node.
 class Node:
@@ -121,6 +122,17 @@ class TrieNode:
             node = node.children[c_idx]
         return node
 
+    def is_words(self, word, start):
+        if start == len(word):
+            return True
+        node = self
+        for i in range(start, len(word)):
+            node = node.children[ord(word[i]) - ord('a')]
+            if node is None:
+                return False
+            if node.is_end and self.is_words(word, i+1):
+                return True
+        return False
 
    
 
@@ -168,8 +180,76 @@ def run_lc211():
 
 
 
+class MapSum_PrefixMap:
+
+    def __init__(self):
+        self.word_map = defaultdict(int)
+        self.prefix_map = defaultdict(int)
+
+    def insert(self, word: str, wval: int) -> None: # 将函数签名改为word和wval, 可读性更强。
+        delta = wval
+        # 对于为什么要设置一个delta，思考这样一个问题。如果insert函数先后输入两组值：("leetcode", 10)和("leetcode", 20)。
+        # "leetcode"这个词的两个wval，是两个都算还是只算一个？如果只算一个，应该算哪个呢？
+        # 因为是同一个词，当然只算一个。因为涉及到更新，所以当然要算第二个。
+        # 之所以要设计一个delta, 就是出于这个原因，解决word相同，而wval不同的情况。
+        # 这种情况下，key没有变，不能当做新来一个词那样，给所有的prefix添加新的wval，而是需要更新。
+        # delta就是就算的新wval 和旧的wval之间的差值，用这个差值去给所有涉及到的prefix赋值就行了。 
+        if word in self.word_map:   # 如果已经见过这个单词, 就不应该继续赋值，而是刷新。
+            delta -= self.word_map[word]
+        self.word_map[word] = wval
+        for i in range(len(word)):
+            prefix = word[:i+1]  # 每种前缀都会出现
+            self.prefix_map[prefix] += delta
+           
+    def sum(self, prefix: str) -> int:
+        return self.prefix_map.get(prefix, 0)
 
 
+class MapSum_Trie:
+    def __init__(self) -> None:
+        self.root = TrieNode()
+        self.word_map = {}
+
+    def insert(self, word, wval):
+        delta = wval
+        if word in self.word_map:
+            delta -= self.word_map[word]
+        self.word_map[word] = wval
+
+        self.root.insert(word, delta=delta)
+    
+    def sum(self, prefix):
+        node = self.root.find_last_node(prefix)
+        return node.ssum if node else 0
+
+
+class TopVotedCandidate:
+
+    def __init__(self, persons: List[int], times: List[int]):
+        # 预计算
+        tops = []
+        top_count = defaultdict(int)
+        top_count[-1] = -1 # 为啥是-1？不是0？
+        cur_top = -1
+        for p in persons:
+            top_count[p] += 1
+            if top_count[p] > top_count[cur_top]:
+                cur_top = p
+            tops.append[p]
+        self.tops = tops
+        self.times = times
+        pass
+
+    def q(self, t: int) -> int:
+        l, r = 0, len(self.times) - 1
+        while l < r:
+            m = l + (r -l + 1) // 2
+            if self.times[m] <= t:
+                l = m
+            else:
+                r = m -1
+        return self.tops[l]
+        
 class Solution:
     def flatten(self, head: 'Node') -> 'Node':
         def dfs(node):
@@ -218,6 +298,7 @@ class Solution:
         
         l = dp[l1][l2]
         return l1 - l + l2 - l
+    
     def getSum(self, a: int, b: int) -> int:
 
         N_DIGIT = 32
@@ -242,8 +323,6 @@ class Solution:
             a = ~a  # 0 取反是-1
         
         return a
-
-
 
     def pathSum(self, root: TreeNode, targetSum: int) -> int:
         # todo: 这个题还有别的解法，至少3种
@@ -304,6 +383,7 @@ class Solution:
         #         res += 1
         return len([c for c in s.strip().split(" ") if c != ""])
         # return res
+    
     def minMoves(self, nums: List[int]) -> int:
         ans = 0
         mmin = min(nums)
@@ -339,7 +419,6 @@ class Solution:
 
         return dfs(tuple(needs))
 
-
     def shoppingOffers(self, price: List[int], special: List[List[int]], needs: List[int]) -> int:
         n_kind = len(price)
         
@@ -367,6 +446,7 @@ class Solution:
         
         res = dfs(tuple(needs))
         return res
+    
     def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
         # 二分法
         n_row = len(matrix)
@@ -383,6 +463,7 @@ class Solution:
                 return True
         
         return False
+    
     def trapRainWater(self, heightMap: List[List[int]]) -> int:
         # 解法1：最小堆。
         # 为什么要用最小堆呢？
@@ -396,60 +477,321 @@ class Solution:
                     water_height[i][j] = heightMap[i][j]
                 else:
                     # 左上角肯定是已经有了的
-                    water_height[i][j] = 
+                    water_height[i][j] = 0
         
         # 左上角肯定是已经有了的。
         
         pass
-
-from collections import defaultdict
-class MapSum_PrefixMap:
-
-    def __init__(self):
-        self.word_map = defaultdict(int)
-        self.prefix_map = defaultdict(int)
-
-    def insert(self, word: str, wval: int) -> None: # 将函数签名改为word和wval, 可读性更强。
-        delta = wval
-        # 对于为什么要设置一个delta，思考这样一个问题。如果insert函数先后输入两组值：("leetcode", 10)和("leetcode", 20)。
-        # "leetcode"这个词的两个wval，是两个都算还是只算一个？如果只算一个，应该算哪个呢？
-        # 因为是同一个词，当然只算一个。因为涉及到更新，所以当然要算第二个。
-        # 之所以要设计一个delta, 就是出于这个原因，解决word相同，而wval不同的情况。
-        # 这种情况下，key没有变，不能当做新来一个词那样，给所有的prefix添加新的wval，而是需要更新。
-        # delta就是就算的新wval 和旧的wval之间的差值，用这个差值去给所有涉及到的prefix赋值就行了。 
-        if word in self.word_map:   # 如果已经见过这个单词, 就不应该继续赋值，而是刷新。
-            delta -= self.word_map[word]
-        self.word_map[word] = wval
-        for i in range(len(word)):
-            prefix = word[:i+1]  # 每种前缀都会出现
-            self.prefix_map[prefix] += delta
-           
-    def sum(self, prefix: str) -> int:
-        return self.prefix_map.get(prefix, 0)
-
-
-class MapSum_Trie:
-    def __init__(self) -> None:
-        self.root = TrieNode()
-        self.word_map = {}
-
-    def insert(self, word, wval):
-        delta = wval
-        if word in self.word_map:
-            delta -= self.word_map[word]
-        self.word_map[word] = wval
-
-        self.root.insert(word, delta=delta)
     
-    def sum(self, prefix):
-        node = self.root.find_last_node(prefix)
-        return node.ssum if node else 0
+    def bulbSwitch(self, n: int) -> int:
+        # bulb_id: 会被切换的轮次代号
+        # 1: 1、
+        # 2: 1、 2、
+        # 3: 1、    3、
+        # 4: 1、 2、    4、
+        # 5: 1、            5、
+        # 6: 1、 2、3、         6、
+        # 7: 1、                    7、
+        # 8: 1、 2、    4、             8、
+        # 9: 1、    3、                     9、
+        # 10: 1、 2、       5、                 10、
+        # 找规律：
+        # (1) 第 k 个灯泡会在其所有约数的轮次中被拨开关。
+        # (2) 因为最开始的时候都是灭的，动单数词，亮；动双数次，灭。要找多少个亮，就找有单数个约数的编号。
+        # (3) 观察上面发现有单数个约束的是：1/4/9。完全平方数！因为完全平方数有两个约束相等！
+        # (4) 某个范围n内，完全平方数的个数：开方向下取整=x。x^2肯定小于n，在范围n内。(x-1)^2也肯定在这个范围内。
+        # (5) 为了避免精度问题，加一点小数。
+        return int(math.sqrt(n + 0.5))
+
+        pass
+
+    def isRectangleCover(self, rectangles: List[List[int]]) -> bool:
+        # 各自面积加起来=最左上角最右下角的面积
+        # 重复的刚好是空缺的，就不行, 顶点次数。
+        x_min, y_min, x_max, y_max = float("inf"), float("inf"), float('-inf'), float('-inf')
+        sum_area = 0
+        for (x_left, y_down, x_right, y_up) in rectangles:  # right >= left, up >= down
+            cur_area = (x_right - x_left) * (y_up - y_down)
+            sum_area += cur_area
+            x_min = min(x_min, x_left)
+            x_max = max(x_max, x_right)
+            y_min = min(y_min, y_down)
+            y_max = max(y_max, y_up)
+        
+        mmax_area = (x_max -x_min) * (y_max - y_min)
+
+        return sum_area == mmax_area
+
+    def integerReplacement(self, n: int) -> int:
+        # 加的话，会变大。上限怎么办？
+        memo = {}
+        def helper(num):
+            if num == 1:
+                return 0
+            if num in memo:
+                return memo[num]
+            res = float("inf")
+            if num % 2 == 0:
+                res = helper(num // 2) + 1
+            else:
+                left = helper(num -1) + 1
+                right = helper(num + 1) + 1
+                res =  min(left, right)
+            memo[num] = res
+            return res
+
+        return helper(n)
+
+    def kthSmallestPrimeFraction(self, arr: List[int], k: int) -> List[int]:
+        n = len(arr)
+        min_frac, max_frac = 0.0, 1.0 
+
+        while True:
+            cur_frac = (min_frac + max_frac) / 2
+            numerator_idx = -1
+            cnt_smaller_than_mid = 0
+            ans_numerator, ans_denominator = 0, 1 # 最大的分数是1， 最小的分数是0。
+
+            for denominator_idx in range(1, n):
+                while arr[numerator_idx + 1] / arr[denominator_idx] < cur_frac:
+                    numerator_idx += 1
+                    # 相当于比较两个分数的大小：a/b > c/d <=> a * d > c * b
+                    if arr[numerator_idx] * ans_denominator > arr[denominator_idx] * ans_numerator: 
+                        ans_numerator, ans_denominator = arr[numerator_idx], arr[denominator_idx]
+                cnt_smaller_than_mid += numerator_idx +  1
+
+            if cnt_smaller_than_mid == k:
+                return [ans_numerator, ans_denominator]
+
+            if cnt_smaller_than_mid < k:
+                min_frac = cur_frac
+            else:
+                max_frac = cur_frac
+
+    def findRelativeRanks(self, score: List[int]) -> List[str]:
+        desc = ["Gold Medal", "Silver Medal", "Bronze Medal" ]
+        arr = sorted(enumerate(score), key=lambda x:-x[1])
+        ans = [""] * len(score)
+        for i, (idx, _) in enumerate(arr):  # 记录两个顺序。
+            ans[idx] = desc[i] if i < 3 else str(i + 1)
+        return ans
+
+            
+            
+
+            
+
+        pass
+
+    def validTicTacToe(self, board: List[str]) -> bool:
+        # X - O = 1 / 0
+       
+        cnt_x = 0
+        cnt_o = 0
+        
+        for string in board:
+            for c in string:
+                cnt_x += 1 if c == 'X' else 0
+                cnt_o += 1 if c == 'O' else 0
+        
+        if not (cnt_x == cnt_o or cnt_x - cnt_o == 1):
+            return False
+
+        is_v1_same = board[0][0] == board[1][0] == board[2][0]
+        is_v2_same = board[0][1] == board[1][1] == board[2][1]
+        is_v3_same = board[0][2] == board[1][2] == board[2][2]
+        is_lefttop_same = board[0][0] == board[1][1] == board[2][2]
+        is_righttop_same = board[0][2] == board[1][1] == board[2][0]
+        is_h1_same = board[0] == 'XXX' or board[0] == 'OOO'
+        is_h2_same = board[1] == 'XXX' or board[1] == 'OOO'
+        is_h3_same = board[2] == 'XXX' or board[2] == 'OOO'
+
+
+        is_x_win = (board[0][0] == 'X' and (is_v1_same or is_h1_same or is_lefttop_same)) or ()
+
+        return (is_v1_same + is_v2_same + is_v3_same + is_lefttop_same + is_righttop_same + is_h1_same + is_h2_same + is_h3_same) <=1
+
+    def loudAndRich(self, richer: List[List[int]], quiet: List[int]) -> List[int]:
+
+        n_person = len(quiet)
+        graph = [[] for _ in range(n_person)]
+        for r in richer:
+            graph[r[1]].append(r[0])
+        
+        ans = [-1] * n_person
+        def dfs(x):
+            if ans[x] != -1:
+                return # 已经找到了
+            ans[x] = x  # 没有比自己更有钱的人时，最安静的是自己
+            for y in graph[x]: # 遍历所有比自己有钱或者比自己更有钱的人，找出最安静的那个
+                dfs(y)
+                if quiet[ans[y]] < quiet[ans[x]]:
+                    ans[x] = ans[y]
+        
+        for i in range(n_person):
+            dfs(i) # 对每个人都找“和他一样有钱，或者比他更有钱的”人当中，最安静的那个
+        
+        return ans
 
 
 
 
+        
+
+        
+        
+        
+        pass
+    
+    def findOcurrences(self, text: str, first: str, second: str) -> List[str]:
+        # 解法2：正则表达式
+        return re.findall(fr'\b{first} (?={second} ([\w]+))\b', text)
+        return re.findall(fr"(?<=\b{first} {second} )(\w+)", text)
+        # 解法1：双指针
+        # if not text:
+        #     return []
+        # text = text.split(' ')
+        # len_text = len(text)
+        # if len_text < 3:
+        #     return []
+        # ans = []
+        # left, right = 0, 1
+        # while right < len_text:
+        #     while right < len_text and (text[left] != first or text[right] != second):
+        #         left += 1
+        #         right += 1
+        #     if right + 1 < len_text:
+        #         ans.append(text[right + 1])
+        #     else:
+        #         break
+        #     left += 1
+        #     right += 1
+        
+        # return ans
+    def numFriendRequests(self, ages: List[int]) -> int:
+        # 解法2：前缀和
+        # 新增刷题经验：
+        # 1. 简化条件，找到考虑单调递增和递减的边界。
+        # 2. 遇到一个数组中所有数组两两比较/组合的情况，可以考虑使用计数排序 + 前缀和
+        # 3. 函数化：年龄变了，条件就变了，针对不同的年龄，思考各自的条件。
+        cnt = [0] * 121
+        for age in ages: # 这组年龄里面，有些数字会出现多次，放在一个计数数组里，可以只算一次。
+            cnt[age] += 1
+        # 对于年龄age来说，有符合条件的边界。(0.5 * age + 8, age]。如果这个范围是整个age，那就直接求和就行；
+        # 现在只是某个范围的一部分，那就减去不符合的部分就行了。pre_sum其实就是从最左到某一个点的求和。
+        # e.g: (2, 5] = [1, 10] - [1, 2] - (5, 10]
+        # 这样的话，就算不是单调的，有多个可能的条件，也可以用这种区间相减的方式得到。
+        pre_sum = [0] * 121     # 可以从数列和的角度来理解前缀和。
+        for i in range(1, 121):
+            pre_sum[i] = pre_sum[i-1] + cnt[i]
+        
+        ans = 0
+        for i in range(15, 121):
+            if cnt[i] > 0:
+                bound = int(i * 0.5 + 8)
+                ans += cnt[i] * (pre_sum[i] - pre_sum[bound - 1] - 1) # -1 是减去自己，可以和同岁的发消息，所以只需要-1，而不需要把所有同龄都减掉。
+        return ans
+
+        # # 解法1：双指针
+        # l = len(ages)
+        # ages.sort()
+        # left = right = ans = 0
+        # for age in ages:
+        #     if age < 15:
+        #         continue
+        #     while ages[left] <= 0.5 * age + 7:
+        #         left += 1
+        #     while right + 1 < l and ages[right + 1] <= age:
+        #         right += 1
+        #     ans += right - left
+        
+        # return ans
+    
+    def findAllConcatenatedWordsInADict(self, words: List[str]) -> List[str]:
+        # 刷题经验：
+        # 1. 由短字符串组成长字符串，先排序，以免还要想办法做动态规划，找最长的。e.g.: catsdog = [0, 0, 1, 1, 0, 0, 1]需要判断要不要从第一个1停止。
+        #    从短到长添加时，'dogcatsdog' 到t时，is_end，但是剩余的不是。没关系，可以走下一个字母，所以就挽救回来了。
+        words.sort(key=len)
+        # print(words)
+        ans = []
+        trie = TrieNode()
+        for word in words:
+            if word == "":
+                continue
+            if trie.is_words(word, 0):
+                ans.append(word)
+            else:
+                trie.insert(word)
+        # print(ans)
+        return ans
+
+def run_lc472():
+    sl = Solution()
+    words = ["cat","cats","catsdogcats","dog","dogcatsdog","hippopotamuses","rat","ratcatdogcat"]
+    sl.findAllConcatenatedWordsInADict(words)
+    pass
 
 
+def run_lc825():
+    pass
+
+
+def run_lc1078():
+    sl = Solution()
+    text =  "alice is aa good girl she is a good student"
+    first = "a"
+    second = "good"
+    print(sl.findOcurrences(text, first, second))
+    pass
+
+def run_lc851():
+    pass
+
+def run_lc794():
+    sl = Solution()
+
+    board = ["O  ","   ","   "]
+    # board = ["XOX"," X ","   "]
+    # board = ["XXX","   ","OOO"]
+    # board = ["XOX","O O","XOX"]
+    board = ["XXX","OOX","OOX"]
+    print(sl.validTicTacToe(board))
+    pass
+
+
+def run_lc786():
+    pass
+
+
+def run_lc397():
+    sl = Solution()
+    n = 8
+    n = 7
+    n = 4
+    n = 1
+    n = 2**31 -1
+    n = 100
+    print(sl.integerReplacement(n))
+    pass
+            
+
+
+
+def run_lc391():
+    sl = Solution()
+    rectangles = [[1,1,3,3],[3,1,4,2],[3,2,4,4],[1,3,2,4],[2,3,3,4]]
+    # rectangles = [[1,1,2,3],[1,3,2,4],[3,1,4,2],[3,2,4,4]]
+    # rectangles = [[1,1,3,3],[3,1,4,2],[1,3,2,4],[3,2,4,4]]
+    # rectangles = [[1,1,3,3],[3,1,4,2],[1,3,2,4],[2,2,4,4]]
+    # rectangles = [[0,0,1,1],[0,1,3,2],[1,0,2,2]]
+    print(sl.isRectangleCover(rectangles))
+    pass
+
+
+
+def run_lc319():
+    sl = Solution()
+    print(sl.bulbSwitch(10))
 
 def run_lc240():
     sl = Solution()
@@ -463,7 +805,6 @@ def run_lc240():
 
     pass
 
- 
 
 def run_lc638():
     # 测试用例
@@ -570,7 +911,14 @@ def main():
     # run_lc453()
     # run_lc211()
     # run_lc638()
-    run_lc240()
+    # run_lc240()
+    # run_lc319()
+    # run_lc391()
+    # run_lc397()
+    # run_lc794()
+    # run_lc1078()
+    run_lc472()
+
     pass
 
 

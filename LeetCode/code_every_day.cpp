@@ -63,6 +63,60 @@ TrieNode* TrieNode::get_last_node(std::string prefix){
     return node;
 }
 
+class MapSum_Map {
+public:
+    MapSum_Map() {}
+
+    void insert(string word, int wval) {
+        int delta = wval;
+        if(word_map.count(word)){  // 判断存在
+            delta -= word_map[word]; // 计算新值和旧值的变量
+        }
+        word_map[word] = wval;
+        for(int i = 0; i < word.size(); i++){
+            prefix_map[word.substr(0, i+1)] += delta;
+        }
+    }
+    
+    int sum(string prefix) {
+        return prefix_map[prefix]; // 默认初始化就为0了。
+    }
+private:
+    // 什么情况下需要private？
+    unordered_map<std::string, int> word_map; 
+    unordered_map<std::string, int> prefix_map;
+};
+
+class MapSum {
+public:
+    MapSum() {}
+
+    void insert(std::string word, int wval);
+    int sum(std::string prefix);
+
+private:
+    TrieNode* root = new TrieNode();    // 这里要写成new 的形式！不能下成TrieNode *root; 为啥呢?
+    unordered_map<std::string, int> word_map;
+};
+
+ void MapSum::insert(string word, int wval){
+        int delta = wval;
+        if(word_map.count(word)){
+            delta -= word_map[word];
+        }
+        word_map[word] = wval;
+        root->insert(word, wval, delta);
+    }
+
+int MapSum::sum(std::string prefix){
+    TrieNode* node = root->get_last_node(prefix);
+    if(node == nullptr){
+        return 0;
+    }else{
+        return node->sum;
+    }
+}
+
 
 class Solution {
 public:
@@ -204,61 +258,63 @@ public:
         
 
     }// func nextGreaterElement
+
+    int countQuadruplets(vector<int>& nums) {
+        // // 解法1： 暴力解法
+        // int n = nums.size();
+        // int ans = 0;
+        // for (int a = 0; a < n; ++a) {
+        //     for (int b = a + 1; b < n; ++b) {
+        //         for (int c = b + 1; c < n; ++c) {
+        //             for (int d = c + 1; d < n; ++d) {
+        //                 if (nums[a] + nums[b] + nums[c] == nums[d]) {
+        //                     ++ ans;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // return ans;
+
+        // // 解法2： 哈希表优化
+        // int n = nums.size();
+        // int ans = 0;
+        // unordered_map<int, int> cnt; // 从第3个数字开始，都有可能是最后的d位置的那个数。
+        // for (int c = n - 2; c >= 2; --c) {
+        //     ++cnt[nums[c + 1]]; // c + 1 这个位置上的数可能是d，记录它出现的次数。如果前面恰巧有三个数的和是nums[c+1]的时候，ans就可以增加了。
+        //     for (int a = 0; a < c ; ++ a) { // 
+        //         for (int b = a + 1; b < c ; ++ b) {
+        //             int sum = nums[a] + nums[b] + nums[c];
+        //             if (cnt.count(sum)) { // 检查有指定的key
+        //                 ans += cnt[sum];
+        //             }
+        //         }
+
+        //     }
+        // }
+        // return ans;
+
+        // 解法3：
+        int n = nums.size();
+        int ans = 0;
+        unordered_map<int, int> cnt; // cnt中记录的是 d - c的值出现的次数。
+        for (int b = n - 3; b >= 1; --b) {
+            for (int d = b + 2; d < n; ++d) {
+                ++cnt[nums[d] - nums[b+1]]; // b变小一次，c就多一个取值范围。这样看，c也会遍历所有可能的值。
+            }
+            for (int a = 0; a < b ; ++a) {
+                int sum = nums[a] + nums[b];
+                if (cnt.count(sum)){
+                    ans += cnt[sum];
+                }
+            }
+        }
+        return ans;
+
+    }
+
 };// class solution
 
-class MapSum_Map {
-public:
-    MapSum_Map() {}
-
-    void insert(string word, int wval) {
-        int delta = wval;
-        if(word_map.count(word)){  // 判断存在
-            delta -= word_map[word]; // 计算新值和旧值的变量
-        }
-        word_map[word] = wval;
-        for(int i = 0; i < word.size(); i++){
-            prefix_map[word.substr(0, i+1)] += delta;
-        }
-    }
-    
-    int sum(string prefix) {
-        return prefix_map[prefix]; // 默认初始化就为0了。
-    }
-private:
-    // 什么情况下需要private？
-    unordered_map<std::string, int> word_map; 
-    unordered_map<std::string, int> prefix_map;
-};
-
-class MapSum {
-public:
-    MapSum() {}
-
-    void insert(std::string word, int wval);
-    int sum(std::string prefix);
-
-private:
-    TrieNode* root = new TrieNode();    // 这里要写成new 的形式！不能下成TrieNode *root; 为啥呢?
-    unordered_map<std::string, int> word_map;
-};
-
- void MapSum::insert(string word, int wval){
-        int delta = wval;
-        if(word_map.count(word)){
-            delta -= word_map[word];
-        }
-        word_map[word] = wval;
-        root->insert(word, wval, delta);
-    }
-
-int MapSum::sum(std::string prefix){
-    TrieNode* node = root->get_last_node(prefix);
-    if(node == nullptr){
-        return 0;
-    }else{
-        return node->sum;
-    }
-}
 
 int run_lc677(){
     MapSum sl;
